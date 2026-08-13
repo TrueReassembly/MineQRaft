@@ -68,8 +68,8 @@ public class QRBuilder {
 
                         Color color;
 
-                        if (!isPixelBlack(qrCode, x, y)) color = foreground;
-                        else color = background;
+                        if (!isPixelBlack(qrCode, x, y)) color = background;
+                        else color = foreground;
 
                         canvas.setPixelColor(x, y, color);
                     }
