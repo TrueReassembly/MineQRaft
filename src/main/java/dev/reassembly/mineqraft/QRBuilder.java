@@ -6,7 +6,6 @@ import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.MapMeta;
 import org.bukkit.map.*;
 import org.jetbrains.annotations.NotNull;
@@ -14,18 +13,18 @@ import org.jetbrains.annotations.NotNull;
 import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.beans.Encoder;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.URI;
-import java.net.URL;
 
 public class QRBuilder {
 
     private static final URI DEFAULT_URI = URI.create("https://modrinth.com");
 
     private URI uri;
+    private Color foreground = Color.BLACK;
+    private Color background = Color.WHITE;
 
     public QRBuilder(String url) {
         try {
@@ -35,6 +34,16 @@ public class QRBuilder {
                     "The uri \"" + url + "\" is invalid. Defaulting to " + DEFAULT_URI);
             this.uri = DEFAULT_URI;
         }
+    }
+
+    public QRBuilder setForegroundColor(Color color) {
+        foreground = color;
+        return this;
+    }
+
+    public QRBuilder setBackgroundColor(Color color) {
+        background = color;
+        return this;
     }
 
     public ItemStack getMap() {
@@ -59,8 +68,8 @@ public class QRBuilder {
 
                         Color color;
 
-                        if (!isPixelBlack(qrCode, x, y)) color = Color.WHITE;
-                        else color = Color.BLACK;
+                        if (!isPixelBlack(qrCode, x, y)) color = foreground;
+                        else color = background;
 
                         canvas.setPixelColor(x, y, color);
                     }
