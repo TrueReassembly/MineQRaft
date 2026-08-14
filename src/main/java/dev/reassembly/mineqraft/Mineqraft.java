@@ -24,6 +24,7 @@ public class Mineqraft {
     public Mineqraft(JavaPlugin plugin) {
         instance = this;
         mapURLKey = new NamespacedKey(plugin, "map-url");
+        plugin.getServer().getPluginManager().registerEvents(new QRCodeListener(), plugin);
     }
 
     public void loadPlacedMaps() {
