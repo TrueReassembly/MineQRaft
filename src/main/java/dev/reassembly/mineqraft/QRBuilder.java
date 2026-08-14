@@ -1,6 +1,7 @@
 package dev.reassembly.mineqraft;
 
 import com.google.zxing.EncodeHintType;
+import io.papermc.paper.persistence.PersistentDataContainerView;
 import net.glxn.qrgen.javase.QRCode;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
@@ -8,6 +9,8 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.MapMeta;
 import org.bukkit.map.*;
+import org.bukkit.persistence.PersistentDataContainer;
+import org.bukkit.persistence.PersistentDataType;
 import org.jetbrains.annotations.NotNull;
 
 import javax.imageio.ImageIO;
@@ -17,6 +20,11 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.URI;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Consumer;
+
+import static dev.reassembly.mineqraft.MapUtils.*;
 
 public class QRBuilder {
 
@@ -47,53 +55,44 @@ public class QRBuilder {
     }
 
     public ItemStack getMap() {
-        ItemStack map = new ItemStack(Material.FILLED_MAP);
+
+        ItemStack map = ItemStack.of(Material.FILLED_MAP);
         MapMeta mapMeta = (MapMeta) map.getItemMeta();
         MapView mapView = Bukkit.createMap(Bukkit.getWorlds().getFirst());
 
         BufferedImage qrCode;
         try {
-            qrCode = parseQRCode();
+            qrCode = parseQRCode(uri);
         } catch (IOException e) {
             Bukkit.getLogger().warning("Something went wrong creating the QR Code");
             return null;
         }
 
-        mapView.addRenderer(new MapRenderer() {
-            @Override
-            public void render(@NotNull MapView map, @NotNull MapCanvas canvas, @NotNull Player player) {
-
-                for (int x = 0; x < 128; x++) {
-                    for (int y = 0; y < 128; y++) {
-
-                        Color color;
-
-                        if (!isPixelBlack(qrCode, x, y)) color = background;
-                        else color = foreground;
-
-                        canvas.setPixelColor(x, y, color);
-                    }
-                }
-            }
-        });
-
-        mapMeta.setMapView(mapView);
+        mapMeta.setMapView(paintMap(mapView, qrCode, foreground, background));
         map.setItemMeta(mapMeta);
+
+        PersistentDataContainer pdc = mapView.getWorld().getPersistentDataContainer();
+        List<String> urls = pdc.get(
+                Mineqraft.getInstance().getMapURLKey(),
+                PersistentDataType.LIST.listTypeFrom(PersistentDataType.STRING)
+                );
+
+        if (urls != null) {
+
+            ArrayList<String> editableURLs = new ArrayList<>(urls);
+            editableURLs.add(mapView.getId() + '|' + uri.getHost() + uri.getPath());
+            pdc.set(
+                    Mineqraft.getInstance().getMapURLKey(),
+                    PersistentDataType.LIST.listTypeFrom(PersistentDataType.STRING),
+                    editableURLs
+            );
+        }
+
         return map;
     }
 
-    private BufferedImage parseQRCode() throws IOException {
-        ByteArrayOutputStream stream = QRCode.from(uri.getHost() + uri.getPath())
-                .withSize(128, 128)
-                .withHint(EncodeHintType.MARGIN, 1)
-                .stream();
-        ByteArrayInputStream bais = new ByteArrayInputStream(stream.toByteArray());
 
-        return ImageIO.read(bais);
-    }
 
-    private boolean isPixelBlack(BufferedImage img, int x, int y) {
-        return (img.getRGB(x, y) & 0b00111111) == 0;
-    }
+
 }
 
