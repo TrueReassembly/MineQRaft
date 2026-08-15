@@ -40,3 +40,21 @@ Or for Maven
 ```
 
 You will likely need to use [shadowJar](https://gradleup.com/shadow/) to shade this library into your main JAR.
+
+# Using the API
+
+The heart of the library is the QRBuilder file, Below is an example you could use:
+
+```java
+import java.awt.*;
+import dev.reassembly.mineqraft.QRBuilder;
+
+ItemStack mapQrCode = new QRBuilder("https://github.com/TrueReassembly")
+        .setBackgroundColor(Color.WHITE)
+        .setForegroundColor(Color.BLUE)
+        .getMap();
+
+for (Player player : Bukkit.getOnlinePlayers()) {
+    player.give(mapQrCode);
+}
+```
